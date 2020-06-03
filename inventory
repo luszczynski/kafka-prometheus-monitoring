@@ -1,0 +1,30 @@
+[prometheus]
+server1 private_ip=server1-ip
+server2 private_ip=server2-ip
+
+[grafana]
+server3 private_ip=server3-ip
+server4 private_ip=server4-ip
+
+[alertmanager]
+server5 private_ip=server5-ip
+server6 private_ip=server6-ip
+
+[node_exporter]
+
+[kafka]
+
+[zookeeper]
+
+[kafka-connect]
+
+[kafka-streams]
+
+[mirror-maker]
+
+[all:vars]
+ansible_ssh_user=ec2-user
+ansible_ssh_private_key_file="{{ playbook_dir }}/kafka.key"
+remote_user="ec2-user"
+gather_facts=false
+become_method=sudo

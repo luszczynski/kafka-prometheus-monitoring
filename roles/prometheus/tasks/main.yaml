@@ -1,0 +1,111 @@
+- name: Create group prometheus
+  group:
+    name: prometheus
+    state: present
+
+- name: Create user and group prometheus
+  user:
+    name: prometheus
+    shell: /sbin/nologin
+    groups: [prometheus]
+    append: yes
+
+- name: Create tmp dir
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /tmp/prometheus
+
+- name: Create data dir for prometheus
+  file:
+    path: /var/lib/prometheus
+    owner: prometheus
+    group: prometheus
+    state: directory
+    mode: '775'
+
+- name: Create prometheus folders
+  file:
+    path: "/etc/prometheus/{{ item }}"
+    owner: prometheus
+    group: prometheus
+    state: directory
+    mode: '775'
+  loop:
+    - rules
+    - rules.d
+    - files_sd
+  
+- name: Unarchive prometheus
+  unarchive:
+    src: https://github.com/prometheus/prometheus/releases/download/v2.18.1/prometheus-2.18.1.linux-amd64.tar.gz
+    dest: /tmp/prometheus
+    remote_src: yes
+
+- name: Get correct path
+  find:
+    paths: [/tmp/prometheus]
+    file_type: directory
+    recurse: no
+  register: resultado_find
+
+- name: Copy files to path
+  copy:
+    src: "{{ resultado_find.files[0].path }}/{{ item }}"
+    dest: /usr/local/bin/
+    remote_src: yes
+    owner: prometheus
+    group: prometheus
+    mode: '775'
+  loop:
+    - prometheus
+    - promtool
+
+- name: Copy folders to prometheus dir
+  copy: 
+    src: "{{ resultado_find.files[0].path }}/{{ item }}"
+    dest: "/etc/prometheus/"
+    remote_src: yes
+    owner: prometheus
+    group: prometheus
+    mode: '775'
+  loop:
+    - consoles/
+    - console_libraries/
+
+- name: Create empty string
+  set_fact:
+    targets: ""
+
+- name: Generate host-vars to prometheus.yml
+  set_fact:
+    targets: "{{ targets }}'{{ hostvars[item]['private_ip'] }}:9100',"
+  loop: "{{ groups['all'] }}"
+
+- name: Remove last char
+  set_fact:
+    targets: "{{ targets | regex_replace('.$','') }}"
+
+- name: Create prometheus config file
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: '775'
+
+- name: Copy prometheus init files
+  copy: 
+    src: prometheus.service
+    dest: /etc/systemd/system/
+    owner: prometheus
+    group: prometheus
+    mode: '775'
+
+- name: Start prometheus server
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: prometheus
+    enabled: yes

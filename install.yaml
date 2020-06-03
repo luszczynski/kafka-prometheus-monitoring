@@ -1,0 +1,22 @@
+- hosts: prometheus
+  become: yes
+  roles: 
+    - ntp
+    - prometheus
+
+- hosts: grafana
+  become: yes
+  roles: 
+    - ntp
+    - grafana
+
+- hosts: alertmanager
+  become: yes
+  roles:
+    - ntp
+    - alertmanager
+
+- hosts: all
+  become: yes
+  roles:
+    - node_exporter

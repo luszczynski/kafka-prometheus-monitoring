@@ -1,0 +1,47 @@
+- name: Configure repo for grafana
+  yum_repository:
+    name: grafana
+    description: Grafana Repo
+    baseurl: https://packages.grafana.com/oss/rpm
+    gpgcheck: yes
+    enabled: yes
+    gpgkey: https://packages.grafana.com/gpg.key
+    sslverify: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+
+- name: Install grafana
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - grafana
+
+- name: Start and enable Grafana
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: grafana-server
+    enabled: yes
+
+- name: Create temporary json dir for conf
+  file:
+    path: "/tmp/json"
+    state: directory
+
+- name: Generate Files from Prometheus servers
+  template:
+    src: "prometheus-datasource.json.j2"
+    dest: "/tmp/json/{{ item }}.json"
+  loop: "{{ groups['prometheus'] }}"
+
+- name: Find json config files
+  find:
+    paths: [/tmp/json/]
+    file_type: file
+    recurse: no
+  register: resultado_find
+
+- name: Generate datasources
+  shell: "curl --silent --fail --show-error --request POST http://admin:redhat123@${HOSTNAME}:3000/api/datasources --header 'Content-Type: application/json' --data-binary @{{ item.path }}"
+  with_items: "{{ resultado_find.files }}"
+  ignore_errors: yes

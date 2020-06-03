@@ -1,0 +1,23 @@
+- name: Install chrony
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - chrony
+
+- name: Start and enable Chrony
+  systemd:
+    state: started
+    name: chronyd
+    enabled: yes
+
+- name: Set ntp server
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^server '
+    line: server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4
+
+- name: Restart Chrony
+  systemd:
+    state: restarted
+    name: chronyd

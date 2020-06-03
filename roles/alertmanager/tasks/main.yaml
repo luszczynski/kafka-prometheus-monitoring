@@ -1,0 +1,71 @@
+- name: Create group alertmanager
+  group:
+    name: alertmanager
+    state: present
+
+- name: Create user alertmanager
+  user:
+    name: alertmanager
+    shell: /sbin/nologin
+    groups: [alertmanager]
+    append: yes
+
+- name: Create alertmanager folders
+  file:
+    path: "{{ item }}"
+    owner: alertmanager
+    group: alertmanager
+    state: directory
+    mode: '775'
+  loop:
+    - /var/lib/alertmanager
+    - /etc/alertmanager
+    - /tmp/alertmanager
+  
+- name: Unarchive alertmanager
+  unarchive:
+    src: https://github.com/prometheus/alertmanager/releases/download/v0.20.0/alertmanager-0.20.0.linux-amd64.tar.gz
+    dest: /tmp/alertmanager
+    remote_src: yes
+
+- name: Get correct path
+  find:
+    paths: [/tmp/alertmanager]
+    file_type: directory
+    recurse: no
+  register: resultado_find
+
+- name: Copy files to path
+  copy:
+    src: "{{ resultado_find.files[0].path }}/{{ item }}"
+    dest: /usr/local/bin/
+    remote_src: yes
+    owner: alertmanager
+    group: alertmanager
+    mode: '775'
+  loop:
+    - amtool
+    - alertmanager
+
+- name: Copy alertmanager init files
+  copy: 
+    src: alertmanager.service
+    dest: /etc/systemd/system/
+    owner: alertmanager
+    group: alertmanager
+    mode: '775'
+
+- name: Copy alertmanager config file
+  copy: 
+    src: "{{ resultado_find.files[0].path }}/alertmanager.yml"
+    dest: /etc/alertmanager/
+    owner: alertmanager
+    group: alertmanager
+    remote_src: yes
+
+- name: Start alertmanager 
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: alertmanager
+    enabled: yes
