@@ -7,14 +7,16 @@ Kafka monitoring using prometheus, alert manager and grafana. Ansible is used as
 * [x] Install prometheus in HA mode
 * [x] Install grafana in HA mode
 * [x] Install alert manager in HA mode
-* [ ] Install kafka exporter
-* [ ] Install jmx exporter
+* [x] Install kafka exporter
+* [x] Install jmx exporter
 * [x] Config prometheus to scrap metrics from nodes
-* [ ] Config prometheus to scrap metrics kafka
+* [x] Config prometheus to scrap metrics kafka
+* [x] Config prometheus to scrap metrics zookeeper
 * [ ] Create/Customize dashboard for Kafka Broker
 * [ ] Create/Customize dashboard for Zookeeper
 * [ ] Create/Customize dashboard for Kafka Connect
 * [ ] Create/Customize dashboard for Mirror Maker 2
+* [ ] Create/Customize dashboard for Kafka Stream
 
 ## How to run
 

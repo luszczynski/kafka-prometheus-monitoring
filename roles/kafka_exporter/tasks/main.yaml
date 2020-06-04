@@ -1,0 +1,57 @@
+- name: Create group kafkaexporter
+  group:
+    name: kafkaexporter
+    state: present
+
+- name: Create user and group kafkaexporter
+  user:
+    name: kafkaexporter
+    shell: /sbin/nologin
+    groups: [kafkaexporter]
+    append: yes
+
+- name: Create tmp dir
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /tmp/kafkaexporter
+
+- name: Unarchive kafkaexporter
+  unarchive:
+    src: https://github.com/danielqsj/kafka_exporter/releases/download/v1.2.0/kafka_exporter-1.2.0.linux-amd64.tar.gz
+    dest: /tmp/kafkaexporter
+    remote_src: yes
+
+- name: Get correct path
+  find:
+    paths: [/tmp/kafkaexporter]
+    file_type: directory
+    recurse: no
+  register: resultado_find
+
+- name: Copy files to path
+  copy:
+    src: "{{ resultado_find.files[0].path }}/{{ item }}"
+    dest: /usr/local/bin/
+    remote_src: yes
+    owner: kafkaexporter
+    group: kafkaexporter
+    mode: '775'
+  loop:
+    - kafka_exporter
+
+- name: Generate kafka exporter service
+  template:
+    src: "kafkaexporter.service.j2"
+    dest: "/etc/systemd/system/kafkaexporter.service"
+    owner: kafkaexporter
+    group: kafkaexporter
+    mode: '775'
+
+- name: Start Kafka Exporter
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: kafkaexporter
+    enabled: yes

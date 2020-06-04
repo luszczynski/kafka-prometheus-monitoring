@@ -1,0 +1,29 @@
+- name: Download Jar
+  get_url:
+    url: https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.13.0/jmx_prometheus_javaagent-0.13.0.jar
+    dest: /usr/local/bin/jmx_prometheus_javaagent-0.13.0.jar
+    mode: "0755"
+
+- name: Copy config.yml to /usr/local/bin/
+  copy:
+    src: config.yml
+    dest: /usr/local/bin/config.yml
+    mode: "0755"
+
+- name: Generate env vars on /etc/environment
+  set_fact: 
+    env_variabless: "KAFKA_OPTS=-javaagent:/usr/local/bin/jmx_prometheus_javaagent-0.13.0.jar=7071:/usr/local/bin/config.yml\nKAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname={{ private_ip }} -Djava.net.preferIPv4Stack=true"
+
+- name: Place variables on /etc/environment
+  lineinfile:
+    path: /etc/environment
+    line: "{{ env_variabless }}"
+    insertafter: EOF
+    
+# - name: Restart kafka
+#   systemd:
+#     state: restarted
+#     daemon_reload: yes
+#     name: kafka
+#     enabled: yes
+

@@ -42,6 +42,6 @@
   register: resultado_find
 
 - name: Generate datasources
-  shell: "curl --silent --fail --show-error --request POST http://admin:redhat123@${HOSTNAME}:3000/api/datasources --header 'Content-Type: application/json' --data-binary @{{ item.path }}"
+  shell: "curl --silent --fail --show-error --request POST http://admin:admin@${HOSTNAME}:3000/api/datasources --header 'Content-Type: application/json' --data-binary @{{ item.path }}"
   with_items: "{{ resultado_find.files }}"
   ignore_errors: yes

@@ -77,15 +77,32 @@
 - name: Create empty string
   set_fact:
     targets: ""
+    targets_zookeeper_jmx : ""
+    targets_kafka_jmx: ""
+    targets_kafka_exporter: ""
 
-- name: Generate host-vars to prometheus.yml
+- name: Generate host-vars to prometheus.yml for node_exporter
   set_fact:
     targets: "{{ targets }}'{{ hostvars[item]['private_ip'] }}:9100',"
   loop: "{{ groups['all'] }}"
 
+- name: Generate host-vars to prometheus.yml for zookeeper
+  set_fact:
+    targets_zookeeper_jmx: "{{ targets_zookeeper_jmx }}'{{ hostvars[item]['private_ip'] }}:7071',"
+  loop: "{{ groups['zookeeper'] }}"
+
+- name: Generate host-vars to prometheus.yml for kafka
+  set_fact:
+    targets_kafka_jmx: "{{ targets_kafka_jmx }}'{{ hostvars[item]['private_ip'] }}:7071',"
+    targets_kafka_exporter: "{{ targets_kafka_exporter }}'{{ hostvars[item]['private_ip'] }}:9308'," 
+  loop: "{{ groups['kafka'] }}" 
+
 - name: Remove last char
   set_fact:
     targets: "{{ targets | regex_replace('.$','') }}"
+    targets_zookeeper_jmx: "{{ targets_zookeeper_jmx | regex_replace('.$','') }}"
+    targets_kafka_jmx: "{{ targets_kafka_jmx | regex_replace('.$','') }}"
+    targets_kafka_exporter: "{{ targets_kafka_exporter | regex_replace('.$','') }}"
 
 - name: Create prometheus config file
   template:

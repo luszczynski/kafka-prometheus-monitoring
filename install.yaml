@@ -1,4 +1,5 @@
 - hosts: prometheus
+  #strategy: free
   become: yes
   roles: 
     - ntp
@@ -20,3 +21,13 @@
   become: yes
   roles:
     - node_exporter
+
+- hosts: kafka,zookeeper
+  become: yes
+  roles:
+    - jmx_exporter
+    
+- hosts: kafka
+  become: yes
+  roles:
+    - kafka_exporter

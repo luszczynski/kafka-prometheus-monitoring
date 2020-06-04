@@ -1,0 +1,15 @@
+[Unit]
+Description=Kafka Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=kafkaexporter
+Group=kafkaexporter
+ExecStart=/usr/local/bin/kafka_exporter --kafka.server={{ private_ip }}:9092
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
