@@ -12,18 +12,19 @@
 
 - name: Generate env vars on /etc/environment
   set_fact: 
-    env_variabless: "KAFKA_OPTS=-javaagent:/usr/local/bin/jmx_prometheus_javaagent-0.13.0.jar=7071:/usr/local/bin/config.yml\nKAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname={{ private_ip }} -Djava.net.preferIPv4Stack=true"
+    env_variabless: "export KAFKA_OPTS=\"-javaagent:/usr/local/bin/jmx_prometheus_javaagent-0.13.0.jar=7071:/usr/local/bin/config.yml\"\nexport KAFKA_JMX_OPTS=\"-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname={{ private_ip }} -Djava.net.preferIPv4Stack=true\""
 
 - name: Place variables on /etc/environment
-  lineinfile:
-    path: /etc/environment
-    line: "{{ env_variabless }}"
-    insertafter: EOF
+  copy:
+    dest: /opt/kafka/bin/environment
+    content: "{{ env_variabless }}"
+    mode: 0755
+    owner: kafka
     
-# - name: Restart kafka
-#   systemd:
-#     state: restarted
-#     daemon_reload: yes
-#     name: kafka
-#     enabled: yes
+- name: Restart kafka
+  shell: "/opt/kafka/bin/kafka-restart.sh"
+  ignore_errors: yes
 
+- name: Restart zookeeper
+  shell: "/opt/kafka/bin/zookeeper-restart.sh"
+  ignore_errors: yes
